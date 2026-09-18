@@ -18,7 +18,7 @@ public class JWTUtils {
     private String SECRET = "Key-is-very-very-important-in-the-code1234*@ewffdsfasdf";
     private SecretKey Key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-    public String generateJwt(String username){
+    public String generateJwtToken(String username){
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())

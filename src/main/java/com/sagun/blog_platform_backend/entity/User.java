@@ -1,12 +1,14 @@
 package com.sagun.blog_platform_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,13 +24,18 @@ public class  User implements UserDetails {
     private Long id;
 
     @Column(nullable = false,length = 70)
-    private String name;
+    private String username;
 
     @Column(nullable=false, length = 50)
     private String email;
 
-    @Column(nullable = false,length = 50)
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private Instant createdAt;
+
+
 
 
     @Override
@@ -36,8 +43,20 @@ public class  User implements UserDetails {
         return List.of();
     }
 
+
+
     @Override
-    public String getUsername() {
-        return "";
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @PrePersist
+    protected void onCreate(){
+        createdAt = Instant.now();
     }
 }
