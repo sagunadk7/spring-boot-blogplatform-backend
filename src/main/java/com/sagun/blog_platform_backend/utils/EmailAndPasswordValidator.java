@@ -9,10 +9,8 @@ public class EmailAndPasswordValidator {
     private static final Pattern passwordPattern = Pattern.compile(PASSWORD_PATTERN);
     private static final  Pattern emailPattern = Pattern.compile(EMAIL_PATTERN);
     public static boolean isStrongPassword(String password){
-        if(password==null){
-            System.out.println("Password null");
-            return false;
-        };
+        if(password==null) return false;
+
         if(password.length()<8 || password.length()>50) return false;
         Matcher matcher = passwordPattern.matcher(password);
         return matcher.matches();
@@ -25,3 +23,10 @@ public class EmailAndPasswordValidator {
     }
 
 }
+
+
+
+
+
+
+

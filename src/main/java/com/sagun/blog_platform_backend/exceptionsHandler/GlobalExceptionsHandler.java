@@ -1,5 +1,6 @@
-package com.sagun.blog_platform_backend.exceptions;
+package com.sagun.blog_platform_backend.exceptionsHandler;
 
+import com.sagun.blog_platform_backend.customException.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptions {
+public class GlobalExceptionsHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException exception){
@@ -24,9 +25,9 @@ public class GlobalExceptions {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException exception){
-        return ResponseEntity.internalServerError().body(Map.of("status",HttpStatus.INTERNAL_SERVER_ERROR,"error","Internal Server error"));
+        return ResponseEntity.internalServerError().body(Map.of("status",HttpStatus.INTERNAL_SERVER_ERROR.value(),"error","Internal Server error"));
     }
 
-    @ExceptionHandler(I)
+
 
 }
