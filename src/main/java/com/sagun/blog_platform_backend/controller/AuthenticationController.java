@@ -25,4 +25,9 @@ public class AuthenticationController {
         return ResponseEntity.ok(userService.responseOnSuccessfulRegistration(requestDto));
     }
 
+    @PostMapping("/change-password")
+    public String changePassword(){
+        return "Password Changed";
+    }
+
 }
