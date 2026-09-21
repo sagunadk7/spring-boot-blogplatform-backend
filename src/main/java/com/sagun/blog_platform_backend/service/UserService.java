@@ -1,5 +1,7 @@
 package com.sagun.blog_platform_backend.service;
 
+import com.sagun.blog_platform_backend.dto.UserLoginRequestDto;
+import com.sagun.blog_platform_backend.dto.UserLoginResponseDto;
 import com.sagun.blog_platform_backend.dto.UserRegistrationRequestDto;
 import com.sagun.blog_platform_backend.dto.UserRegistrationResponseDto;
 import com.sagun.blog_platform_backend.entity.User;
@@ -8,6 +10,7 @@ import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +46,43 @@ public class UserService {
         String token = generateJwtToken(user.getUsername());
         return UserRegistrationRequestResponseMapper.toResponseDto(user,token);
 
+    }
+
+    public String changePassword(String password){
+        if(!EmailAndPasswordValidator.isStrongPassword(password)){
+            throw new IllegalArgumentException();
+        }
+
+        String username = null;
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(principal instanceof User user){
+            username = user.getUsername();
+        }
+        if(username == null){
+            throw new RuntimeException("Internal Server error");
+        }
+        User user = repository.findByusername(username).orElseThrow(() -> new RuntimeException());
+        System.out.println("From ' changePassword ' user detail service: "+user.getUsername());
+
+        if(user.getPassword().equals(password)){
+            throw new IllegalArgumentException();
+        }
+        user.setPassword(encoder.encode(password));
+        repository.save(user);
+        return "Password Changed successfully" + "Your new password is: "+ " "+password;
+    }
+
+
+    public UserLoginResponseDto login(UserLoginRequestDto requestDto){
+        String token = null;
+        User user = repository.findByusername(requestDto.username()).orElseThrow(()->new RuntimeException("User not found"));
+        if(encoder.matches(requestDto.password(),user.getPassword())){
+            token  = jwtUtils.generateJwtToken(user.getUsername());
+        }
+        if(token==null){
+            throw new RuntimeException();
+        }
+        return new UserLoginResponseDto(token);
     }
 
 }
