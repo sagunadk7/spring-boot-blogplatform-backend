@@ -1,7 +1,6 @@
 package com.sagun.blog_platform_backend.controller;
 
 import com.sagun.blog_platform_backend.dto.*;
-import com.sagun.blog_platform_backend.entity.User;
 import com.sagun.blog_platform_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

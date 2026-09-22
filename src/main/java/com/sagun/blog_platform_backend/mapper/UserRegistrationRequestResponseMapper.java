@@ -5,8 +5,8 @@ import com.sagun.blog_platform_backend.entity.User;
 
 public class UserRegistrationRequestResponseMapper {
 
-    public static UserRegistrationResponseDto toResponseDto(User user, String token){
-        return new UserRegistrationResponseDto(user.getUsername(), token);
+    public static UserRegistrationResponseDto toResponseDto(User user, boolean isRegistered){
+        return new UserRegistrationResponseDto(user.getUsername(), isRegistered);
     }
 
 }

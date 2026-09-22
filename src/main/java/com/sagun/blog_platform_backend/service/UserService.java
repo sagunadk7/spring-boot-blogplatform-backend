@@ -43,8 +43,7 @@ public class UserService {
     @Transactional
     public UserRegistrationResponseDto responseOnSuccessfulRegistration(UserRegistrationRequestDto requestDto){
         User user = createUser(requestDto);
-        String token = generateJwtToken(user.getUsername());
-        return UserRegistrationRequestResponseMapper.toResponseDto(user,token);
+        return UserRegistrationRequestResponseMapper.toResponseDto(user,true);
 
     }
 
