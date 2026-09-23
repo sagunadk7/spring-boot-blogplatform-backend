@@ -41,10 +41,9 @@ public class UserService {
     }
 
     @Transactional
-    public UserRegistrationResponseDto responseOnSuccessfulRegistration(UserRegistrationRequestDto requestDto){
+    public UserRegistrationResponseDto responseOnSuccessfulRegistration(UserRegistrationRequestDto requestDto) {
         User user = createUser(requestDto);
-        return UserRegistrationRequestResponseMapper.toResponseDto(user,true);
-
+        return UserRegistrationRequestResponseMapper.toResponseDto(true);
     }
 
     public String changePassword(String password){
