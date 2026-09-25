@@ -9,9 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/posts")
 public class BlogController {
 
+    @GetMapping("/")
+    public String getAllPost(){
+        return "My Blog post ";
+    }
+
     @GetMapping("/{id}")
-    public String getAllPost(@PathVariable Long id){
-        return "My Blog post: "+id;
+    public String getPostById(@PathVariable Long id){
+        return "Post Id no: "+id;
     }
 
 }
