@@ -7,13 +7,14 @@ import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.AuthenticationException;
 import java.util.Objects;
 
 @Service
@@ -52,18 +53,13 @@ public class UserService {
             throw new IllegalArgumentException();
         }
 
-        String username = null;
-        Object principal = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
-        if(principal instanceof User user){
-            username = user.getUsername();
-        }
+        String username = getAuthenticatedUser().getUsername();
         if(username == null){
             throw new RuntimeException("Internal Server error");
         }
         User user = repository.findByusername(username).orElseThrow(RuntimeException::new);
         System.out.println("From ' changePassword ' user detail service: "+user.getUsername());
 
-        assert user.getPassword() != null;
         if(user.getPassword().equals(password)){
             throw new IllegalArgumentException();
         }
@@ -85,15 +81,17 @@ public class UserService {
         return new UserLoginResponseDto(token);
     }
 
-    public String updateEmail(UserEmailUpdateRequestDto requestDto){
-        System.out.println("from service");
-        assert requestDto!=null : "Dto cannot be null";
-        String username = null;
+
+    private User getAuthenticatedUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assert authentication != null : "authentication cannot be null";
-        if(authentication.getPrincipal() instanceof User user){
-            username = user.getUsername();
+        if(authentication == null || !(authentication.getPrincipal() instanceof User principal)){
+            throw new RuntimeException("No authenticated user in context");
         }
+        return repository.findByusername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated user no longer exists"));
+    }
+
+    public String updateEmail(UserEmailUpdateRequestDto requestDto){
+        String username = getAuthenticatedUser().getUsername();
         if(username==null){
             throw new RuntimeException("Internal server error");
         }
@@ -102,5 +100,8 @@ public class UserService {
         repository.save(user);
         return "Successfully updated an email ";
     }
+
+
+
 
 }
