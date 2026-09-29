@@ -29,4 +29,9 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/refresh-token")
+    public String refreshToken(){
+        return "This is refresh-api";
+    }
+
 }

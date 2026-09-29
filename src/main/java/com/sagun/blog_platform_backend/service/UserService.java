@@ -14,8 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
-import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -100,6 +98,7 @@ public class UserService {
         repository.save(user);
         return "Successfully updated an email ";
     }
+
 
 
 
