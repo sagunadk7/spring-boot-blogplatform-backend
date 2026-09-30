@@ -14,17 +14,27 @@ import java.util.Date;
 @Component
 public class JWTUtils {
 
-    private int EXPIRATION_TIME = 1000*60*60;
+    private int ACCESS_EXPIRATION_TIME = 1000*60*10;
+    private int REFRESH_TOKEN_TIME = 15000*60*60;
     private String SECRET = "Key-is-very-very-important-in-the-code1234*@ewffdsfasdf";
     private SecretKey Key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-    public String generateJwtToken(String username){
-        return Jwts.builder()
+    public String generateJwtToken(String username,boolean isAccessToken){
+        if(isAccessToken){
+            return Jwts.builder()
+                    .setSubject(username)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis()+ACCESS_EXPIRATION_TIME))
+                    .signWith(Key)
+                    .compact();
+        } else { return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis()+EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis()+REFRESH_TOKEN_TIME))
                 .signWith(Key)
                 .compact();
+
+        }
     }
 
     public Claims extractClaims(String token){

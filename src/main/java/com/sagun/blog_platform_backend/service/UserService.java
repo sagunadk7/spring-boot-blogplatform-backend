@@ -6,7 +6,11 @@ import com.sagun.blog_platform_backend.mapper.UserRegistrationRequestResponseMap
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,9 +40,7 @@ public class UserService {
         return repository.save(user);
 
     }
-    public String generateJwtToken(String token){
-        return jwtUtils.generateJwtToken(token);
-    }
+
 
     @Transactional
     public UserRegistrationResponseDto responseOnSuccessfulRegistration(UserRegistrationRequestDto requestDto) {
@@ -67,15 +69,23 @@ public class UserService {
     }
 
 
-    public UserLoginResponseDto login(UserLoginRequestDto requestDto){
+    public UserLoginResponseDto login(UserLoginRequestDto requestDto, HttpServletResponse response){
         String token = null;
         User user = repository.findByusername(requestDto.username()).orElseThrow(()->new RuntimeException("User not found"));
         if(encoder.matches(requestDto.password(),user.getPassword())){
-            token  = jwtUtils.generateJwtToken(user.getUsername());
+            token  = jwtUtils.generateJwtToken(user.getUsername(),true);
         }
         if(token==null){
             throw new RuntimeException();
         }
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", jwtUtils.generateJwtToken(user.getUsername(), false))
+                .httpOnly(true)
+                .secure(true)
+                .maxAge(7*24*60*60)
+                .sameSite("strict")
+                .path("/api/v1/auth/refresh-token")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return new UserLoginResponseDto(token);
     }
 
