@@ -35,6 +35,10 @@ public class  User implements UserDetails {
     @Column(nullable = false)
     private Instant createdAt;
 
+    @OneToOne
+    @JoinColumn(name="post_id")
+    public Post post;
+
 
 
 

@@ -6,7 +6,6 @@ import com.sagun.blog_platform_backend.mapper.UserRegistrationRequestResponseMap
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +16,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 
 @Service
@@ -54,13 +55,10 @@ public class UserService {
         }
 
         String username = getAuthenticatedUser().getUsername();
-        if(username == null){
-            throw new RuntimeException("Internal Server error");
-        }
         User user = repository.findByusername(username).orElseThrow(RuntimeException::new);
         System.out.println("From ' changePassword ' user detail service: "+user.getUsername());
 
-        if(user.getPassword().equals(password)){
+        if(Objects.equals(user.getPassword(), password)){
             throw new IllegalArgumentException();
         }
         user.setPassword(encoder.encode(password));
@@ -100,15 +98,11 @@ public class UserService {
 
     public String updateEmail(UserEmailUpdateRequestDto requestDto){
         String username = getAuthenticatedUser().getUsername();
-        if(username==null){
-            throw new RuntimeException("Internal server error");
-        }
         User user = repository.findByusername(username).orElseThrow(()-> new RuntimeException("User not found"));
         user.setEmail(requestDto.email());
         repository.save(user);
         return "Successfully updated an email ";
     }
-
 
 
 
