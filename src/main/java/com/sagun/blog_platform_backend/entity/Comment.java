@@ -4,38 +4,36 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import org.hibernate.annotations.BatchSize;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name="comment")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Comment {
+public class Comment extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, length = 2000)
+    private String body;
 
-    @Column(nullable = false, length = 1000)
-    private String content;
+    @ManyToOne(fetch = FetchType.LAZY,optional = false)
+    @JoinColumn(name="post_id",nullable = false,foreignKey = @ForeignKey(name = "fk_comments_post"))
+    private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY,optional = false)
+    @JoinColumn(name = "author_id",nullable = false,foreignKey = @ForeignKey(name = "fk_comments_author"))
+    private User author;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="parent_id")
-    private Comment parent;
+    @JoinColumn(name = "parent_id",foreignKey = @ForeignKey(name = "fk_comments_parents"))
+    private Comment  parent;
+
+    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL,orphanRemoval = true)
+    @BatchSize(size = 50)
+    private Set<Comment> replies = new LinkedHashSet<>();
 
 
-    private User user;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> replies = new ArrayList<>();
-
-    @CreationTimestamp
-    @Column(name="created_at",nullable = false,updatable = false)
-    private Instant createdAt;
 
 }

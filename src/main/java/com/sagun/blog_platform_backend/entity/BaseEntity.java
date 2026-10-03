@@ -30,4 +30,7 @@ public abstract class BaseEntity {
     )
     private Instant updateAt;
 
+    @Version
+    private long version;
+
 }

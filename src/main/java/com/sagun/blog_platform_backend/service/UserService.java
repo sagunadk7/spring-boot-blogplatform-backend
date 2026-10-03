@@ -56,7 +56,7 @@ public class UserService {
 
         String username = getAuthenticatedUser().getUsername();
         User user = repository.findByusername(username).orElseThrow(RuntimeException::new);
-        System.out.println("From ' changePassword ' user detail service: "+user.getUsername());
+        System.out.println("From ' changePassword ' author detail service: "+user.getUsername());
 
         if(Objects.equals(user.getPassword(), password)){
             throw new IllegalArgumentException();
@@ -91,9 +91,9 @@ public class UserService {
     private User getAuthenticatedUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null || !(authentication.getPrincipal() instanceof User principal)){
-            throw new RuntimeException("No authenticated user in context");
+            throw new RuntimeException("No authenticated author in context");
         }
-        return repository.findByusername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated user no longer exists"));
+        return repository.findByusername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated author no longer exists"));
     }
 
     public String updateEmail(UserEmailUpdateRequestDto requestDto){
