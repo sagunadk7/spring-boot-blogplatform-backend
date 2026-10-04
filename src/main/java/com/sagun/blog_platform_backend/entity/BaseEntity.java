@@ -3,9 +3,12 @@ package com.sagun.blog_platform_backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.Objects;
+
 
 @Getter
 @Setter
@@ -32,5 +35,21 @@ public abstract class BaseEntity {
 
     @Version
     private long version;
+
+    @Override
+    public final boolean equals (Object o){
+        if(this == o) return true;
+        if((o==null) || Hibernate.getClass(this) != Hibernate.getClass(o)){
+            return false;
+        }
+        BaseEntity that = (BaseEntity) o;
+        return id != null && Objects.equals(id,that.getId());
+    }
+
+    @Override
+    public final int hashCode(){
+        return Hibernate.getClass(this).hashCode();
+    }
+
 
 }

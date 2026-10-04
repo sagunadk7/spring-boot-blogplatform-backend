@@ -35,5 +35,21 @@ public class Comment extends BaseEntity {
     private Set<Comment> replies = new LinkedHashSet<>();
 
 
+    public Comment(Post post, User author, String body, Comment parent) {
+        this.post = post;
+        this.author = author;
+        this.body = body;
+        this.parent = parent;
+    }
 
+    public void edit(String body){
+        this.body = body;
+    }
+
+    public Comment reply(User author, String body){
+        Comment r = new Comment(this.post, author, body, this);
+        replies.add(r);
+        post.getComments().add(r);
+        return r;
+    }
 }
