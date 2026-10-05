@@ -1,11 +1,16 @@
 package com.sagun.blog_platform_backend.service;
 
+import com.sagun.blog_platform_backend.entity.User;
+import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Locale;
 
 @Component
 @AllArgsConstructor
@@ -15,7 +20,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        return repository.findByusername(name).orElseThrow(()->new RuntimeException());
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        User user = (identifier.contains("@")
+                ? repository.findByEmail(identifier.trim().toLowerCase(Locale.ROOT))
+                : repository.findByUsername(identifier.trim()))
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
+        return UserPrincipal.from(user);
     }
 }

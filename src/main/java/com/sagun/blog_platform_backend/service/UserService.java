@@ -37,7 +37,7 @@ public class UserService {
         User user = new User();
         user.setEmail(requestDto.email().trim());
         user.setUsername(requestDto.username().trim());
-        user.setPassword(encoder.encode(requestDto.password()));
+        user.setPasswordHash(encoder.encode(requestDto.password()));
         return repository.save(user);
 
     }
@@ -55,13 +55,13 @@ public class UserService {
         }
 
         String username = getAuthenticatedUser().getUsername();
-        User user = repository.findByusername(username).orElseThrow(RuntimeException::new);
+        User user = repository.findByUsername(username).orElseThrow(RuntimeException::new);
         System.out.println("From ' changePassword ' author detail service: "+user.getUsername());
 
-        if(Objects.equals(user.getPassword(), password)){
+        if(Objects.equals(user.getPasswordHash(), password)){
             throw new IllegalArgumentException();
         }
-        user.setPassword(encoder.encode(password));
+        user.setPasswordHash(encoder.encode(password));
         repository.save(user);
         return "Password Changed successfully" + "Your new password is: "+ " "+password;
     }
@@ -69,8 +69,8 @@ public class UserService {
 
     public UserLoginResponseDto login(UserLoginRequestDto requestDto, HttpServletResponse response){
         String token = null;
-        User user = repository.findByusername(requestDto.username()).orElseThrow(()->new RuntimeException("User not found"));
-        if(encoder.matches(requestDto.password(),user.getPassword())){
+        User user = repository.findByUsername(requestDto.username()).orElseThrow(()->new RuntimeException("User not found"));
+        if(encoder.matches(requestDto.password(),user.getPasswordHash())){
             token  = jwtUtils.generateJwtToken(user.getUsername(),true);
         }
         if(token==null){
@@ -93,12 +93,12 @@ public class UserService {
         if(authentication == null || !(authentication.getPrincipal() instanceof User principal)){
             throw new RuntimeException("No authenticated author in context");
         }
-        return repository.findByusername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated author no longer exists"));
+        return repository.findByUsername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated author no longer exists"));
     }
 
     public String updateEmail(UserEmailUpdateRequestDto requestDto){
         String username = getAuthenticatedUser().getUsername();
-        User user = repository.findByusername(username).orElseThrow(()-> new RuntimeException("User not found"));
+        User user = repository.findByUsername(username).orElseThrow(()-> new RuntimeException("User not found"));
         user.setEmail(requestDto.email());
         repository.save(user);
         return "Successfully updated an email ";

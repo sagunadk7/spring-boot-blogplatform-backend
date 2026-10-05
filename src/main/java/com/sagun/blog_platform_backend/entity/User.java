@@ -1,66 +1,116 @@
 package com.sagun.blog_platform_backend.entity;
 
+import com.sagun.blog_platform_backend.enums.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.BatchSize;
 
-import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
 @Table(name = "users")
-public class  User implements UserDetails {
+public class  User extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false,length = 70)
+    @Column(nullable = false,length = 50)
     private String username;
 
-    @Column(nullable=false, length = 50)
+    @Column(nullable=false)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Column(nullable = false)
-    private Instant createdAt;
+    private boolean enabled;
 
-    @OneToOne
-    @JoinColumn(name="post_id")
-    public Post post;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_roles",joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role",nullable = false,length = 20)
+    private Set<Role> roles = new HashSet<>(Set.of(Role.USER));
 
+    @OneToMany(mappedBy = "author")
+    @BatchSize(size = 50)
+    public Set<Post> posts = new HashSet<>();
 
+    @OneToMany(mappedBy = "author")
+    @BatchSize(size = 50)
+    private Set<Comment> comments = new HashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    @BatchSize(size = 50)
+    private Set<PostLike> likes = new HashSet<>();
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+    public User(){}
+
+    public User(String username,String email, String passwordHash){
+        this.username = username;
+        setEmail(email);
+        this.passwordHash = passwordHash;
     }
 
-
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
+    public void setEmail(String email){
+        this.email = email.toLowerCase(Locale.ROOT).trim();
     }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+    public String getUsername(){
+        return username;
     }
 
-    @PrePersist
-    protected void onCreate(){
-        createdAt = Instant.now();
+    public String getEmail(){
+        return email;
+    }
+
+    public String getPasswordHash(){
+        return passwordHash;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public Set<Post> getPosts() {
+        return posts;
+    }
+
+    public Set<Comment> getComments() {
+        return comments;
+    }
+
+    public Set<PostLike> getLikes() {
+        return likes;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public void setPosts(Set<Post> posts) {
+        this.posts = posts;
+    }
+
+    public void setComments(Set<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public void setLikes(Set<PostLike> likes) {
+        this.likes = likes;
     }
 }
