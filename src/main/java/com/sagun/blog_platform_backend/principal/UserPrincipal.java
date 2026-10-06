@@ -32,7 +32,6 @@ public final class UserPrincipal implements UserDetails {
         this.enabled = enabled;
         this.authorities = authorities;
     }
-
     public static UserPrincipal from(User user){
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
@@ -79,6 +78,7 @@ public final class UserPrincipal implements UserDetails {
     public boolean equals(Object o){
         return this == o || ( o instanceof UserPrincipal other && Objects.equals(id,other.id));
     }
+
 
     @Override
     public int hashCode(){
