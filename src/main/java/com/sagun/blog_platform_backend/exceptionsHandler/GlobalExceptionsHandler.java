@@ -1,6 +1,6 @@
 package com.sagun.blog_platform_backend.exceptionsHandler;
 
-import com.sagun.blog_platform_backend.customException.ResourceNotFoundException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

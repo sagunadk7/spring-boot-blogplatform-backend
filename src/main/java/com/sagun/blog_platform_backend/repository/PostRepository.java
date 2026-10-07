@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     @EntityGraph(attributePaths = "author")
-    Page<Post> findByStatus(PostStatus status);
+    Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
     @EntityGraph(attributePaths = {"author","categories"})
     Optional<Post> findBySlug(String slug);
