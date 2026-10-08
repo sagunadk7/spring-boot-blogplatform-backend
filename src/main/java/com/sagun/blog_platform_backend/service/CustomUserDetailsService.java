@@ -22,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        System.out.println("This is identifier: "+ identifier);
         User user = (identifier.contains("@")
                 ? repository.findByEmail(identifier.trim().toLowerCase(Locale.ROOT))
                 : repository.findByUsername(identifier.trim()))

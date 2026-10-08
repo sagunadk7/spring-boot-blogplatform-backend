@@ -23,10 +23,10 @@ public class GlobalExceptionsHandler {
         return ResponseEntity.badRequest().body(messages);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException exception){
-        return ResponseEntity.internalServerError().body(Map.of("status",HttpStatus.INTERNAL_SERVER_ERROR.value(),"error","Internal Server error"));
-    }
+//    @ExceptionHandler(RuntimeException.class)
+//    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException exception){
+//        return ResponseEntity.internalServerError().body(Map.of("status",HttpStatus.INTERNAL_SERVER_ERROR.value(),"error","Internal Server error"));
+//    }
 
 
 

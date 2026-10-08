@@ -1,21 +1,20 @@
 package com.sagun.blog_platform_backend.controller;
 
+import com.sagun.blog_platform_backend.dto.CreatePostRequestDto;
 import com.sagun.blog_platform_backend.service.PostService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api/v1/post")
 public class BlogController {
 
     private final PostService service;
 
-    @GetMapping("/")
-    public String getAllPost(){
+    @PostMapping("/create")
+    public String createPost(@RequestBody CreatePostRequestDto requestDto){
+        service.createBlog(requestDto);
         return "My Blog post ";
     }
 

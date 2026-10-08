@@ -3,6 +3,7 @@ package com.sagun.blog_platform_backend.service;
 import com.sagun.blog_platform_backend.dto.*;
 import com.sagun.blog_platform_backend.entity.User;
 import com.sagun.blog_platform_backend.mapper.UserRegistrationRequestResponseMapper;
+import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
@@ -35,6 +36,7 @@ public class UserService {
             throw new IllegalArgumentException("Invalid User Registration Request 2");
         }
         User user = new User();
+        user.setEnabled(true);
         user.setEmail(requestDto.email().trim());
         user.setUsername(requestDto.username().trim());
         user.setPasswordHash(encoder.encode(requestDto.password()));
@@ -90,7 +92,7 @@ public class UserService {
 
     private User getAuthenticatedUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null || !(authentication.getPrincipal() instanceof User principal)){
+        if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)){
             throw new RuntimeException("No authenticated author in context");
         }
         return repository.findByUsername(principal.getUsername()).orElseThrow(()-> new UsernameNotFoundException("Authenticated author no longer exists"));

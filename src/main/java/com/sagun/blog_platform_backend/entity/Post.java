@@ -34,6 +34,7 @@ public class Post extends BaseEntity {
     private String content;
 
     @Column(nullable = false,length = 20)
+    @Enumerated(EnumType.STRING)
     private PostStatus status = PostStatus.DRAFT;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

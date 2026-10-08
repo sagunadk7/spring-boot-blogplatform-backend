@@ -8,6 +8,7 @@ public class EmailAndPasswordValidator {
     private static final String EMAIL_PATTERN = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final Pattern passwordPattern = Pattern.compile(PASSWORD_PATTERN);
     private static final  Pattern emailPattern = Pattern.compile(EMAIL_PATTERN);
+
     public static boolean isStrongPassword(String password){
         if(password==null) return false;
 

@@ -28,6 +28,7 @@ public abstract class BaseEntity {
             nullable = false,
             updatable = false
     )
+    @LastModifiedDate
     private Instant createdAt;
 
     @Column(
