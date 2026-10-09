@@ -14,6 +14,14 @@ public final class UserPrincipal implements UserDetails {
 
     private final long id;
 
+    public long getId() {
+        return id;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
     private final String username;
 
     private final String email;
@@ -83,5 +91,9 @@ public final class UserPrincipal implements UserDetails {
     @Override
     public int hashCode(){
         return Objects.hashCode(id);
+    }
+
+    public String getEmail() {
+        return email;
     }
 }
