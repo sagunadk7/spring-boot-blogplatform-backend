@@ -1,9 +1,10 @@
 package com.sagun.blog_platform_backend.service;
 
-import com.sagun.blog_platform_backend.customException.BlogDoesNotExistException;
 import com.sagun.blog_platform_backend.customException.ResourceNotFoundException;
 import com.sagun.blog_platform_backend.dto.CreatePostRequestDto;
+import com.sagun.blog_platform_backend.dto.PageResponseDto;
 import com.sagun.blog_platform_backend.dto.PostResponseDto;
+import com.sagun.blog_platform_backend.dto.PostSummary;
 import com.sagun.blog_platform_backend.entity.Category;
 import com.sagun.blog_platform_backend.entity.Post;
 import com.sagun.blog_platform_backend.entity.User;
@@ -14,16 +15,11 @@ import com.sagun.blog_platform_backend.repository.CategoryRepository;
 import com.sagun.blog_platform_backend.repository.PostRepository;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.text.Normalizer;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -54,20 +50,31 @@ public class PostService {
         return PostResponseDto.from(post);
     }
 
-    private User getAuthenticatedUser(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)){
-            throw new RuntimeException("No authenticated author in context");
+    public PageResponseDto<PostSummary> listPublished(Pageable pageable){
+        return PageResponseDto.from(postRepository.findByStatus(PostStatus.PUBLISHED,pageable).map(PostSummary::from));
+    }
+
+
+    public PageResponseDto<String> listPublishedSlugs(Pageable pageable){
+        return PageResponseDto.from(postRepository.findPublishedSlugs(PostStatus.PUBLISHED,pageable));
+    }
+
+    public PostResponseDto getPublishedBySlug(String slug){
+        Post post = postRepository.findBySlugAndStatus(slug, PostStatus.PUBLISHED).orElseThrow(() -> new ResourceNotFoundException("Post not found: " + slug));
+        return PostResponseDto.from(post);
+    }
+
+
+    @Transactional
+    public PostResponseDto publish(String slug,UserPrincipal principal) {
+        Post post = postRepository.findBySlug(slug).orElseThrow(() -> new ResourceNotFoundException("Post not found: " + slug));
+        boolean isOwner = post.getAuthor().getId().equals(principal.getId());
+        boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if(!isOwner && !isAdmin){
+            throw new AccessDeniedException("You cannot publish this post");
         }
-        return userRepository.findByUsername(principal.getUsername()).orElseThrow(()->new UsernameNotFoundException("Authenticated author no longer exists"));
-    }
-
-    public Post getBlogsBySlug(String slug){
-        return postRepository.findBySlug(slug).orElseThrow(()-> new BlogDoesNotExistException("Blog does not exist"));
-    }
-
-    public Page<String> getAllSlugOfBlog(PostStatus status, Pageable pageable){
-        return postRepository.findPublishedSlugs(status,pageable);
+        post.publish();
+        return PostResponseDto.from(post);
     }
 
     private String  uniqueSlug(String title){

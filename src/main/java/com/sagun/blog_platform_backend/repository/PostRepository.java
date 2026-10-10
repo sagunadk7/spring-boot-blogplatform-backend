@@ -24,6 +24,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = "author")
     Page<Post> findByCategories_Slug(String slug, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"author","categories"})
+    Optional<Post> findBySlugAndStatus(String slug,PostStatus status);
+
     boolean existsBySlug(String slug);
 
     @Query(value = "select p.slug from Post p where p.status = :status ",
