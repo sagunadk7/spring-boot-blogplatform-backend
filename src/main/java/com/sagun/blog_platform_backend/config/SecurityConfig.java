@@ -4,6 +4,7 @@ import com.sagun.blog_platform_backend.filter.JWTFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -33,7 +34,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http){
         return http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth->auth.requestMatchers("/api/v1/auth/login","/api/v1/auth/register","/api/v1/auth/refresh-token").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(auth->auth.requestMatchers("/api/v1/auth/login","/api/v1/auth/register","/api/v1/auth/refresh-token","/api/v1/posts").permitAll().requestMatchers(HttpMethod.GET, "/api/v1/posts/*").permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

@@ -20,7 +20,6 @@ public class CategorySeeder implements CommandLineRunner {
                 categoryRepository.save(new Category(type,getSlug(type.toString())));
             }
         }
-        System.out.println("Command line runner ran successfully");
     }
 
     private String getSlug(String type){

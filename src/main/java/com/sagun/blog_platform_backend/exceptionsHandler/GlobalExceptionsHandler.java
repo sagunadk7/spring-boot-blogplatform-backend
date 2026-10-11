@@ -1,6 +1,8 @@
 package com.sagun.blog_platform_backend.exceptionsHandler;
 
 
+import com.sagun.blog_platform_backend.customException.ConflictException;
+import com.sagun.blog_platform_backend.customException.InvalidRequestException;
 import com.sagun.blog_platform_backend.customException.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -41,6 +43,16 @@ public class GlobalExceptionsHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail integrity(DataIntegrityViolationException ex){
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,"The request conflicts with existing data.");
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ProblemDetail conflict(ConflictException ex){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    ProblemDetail invalid(InvalidRequestException ex){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,ex.getMessage());
     }
 
 

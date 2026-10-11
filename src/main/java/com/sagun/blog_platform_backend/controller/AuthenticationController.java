@@ -21,7 +21,12 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<UserRegistrationResponseDto> userRegistration(@RequestBody UserRegistrationRequestDto requestDto){
-        return ResponseEntity.ok(userService.responseOnSuccessfulRegistration(requestDto));
+        return ResponseEntity.ok(userService.register(requestDto));
+    }
+
+    @PostMapping("/create-user")
+    public ResponseEntity<UserRegistrationResponseDto> createUser(@RequestBody UserRegistrationRequestDto requestDto){
+        return ResponseEntity.ok(userService.register(requestDto));
     }
 
     @PostMapping("/change-password")

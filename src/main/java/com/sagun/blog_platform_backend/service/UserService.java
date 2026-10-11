@@ -1,8 +1,10 @@
 package com.sagun.blog_platform_backend.service;
 
+import com.sagun.blog_platform_backend.customException.ConflictException;
+import com.sagun.blog_platform_backend.customException.InvalidRequestException;
 import com.sagun.blog_platform_backend.dto.*;
 import com.sagun.blog_platform_backend.entity.User;
-import com.sagun.blog_platform_backend.mapper.UserRegistrationRequestResponseMapper;
+import com.sagun.blog_platform_backend.enums.Role;
 import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
@@ -18,7 +20,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 
 @Service
@@ -28,28 +33,45 @@ public class UserService {
     private final JWTUtils jwtUtils;
     private final PasswordEncoder encoder;
 
-    public User createUser(UserRegistrationRequestDto requestDto){
-        if(requestDto.password() == null || requestDto.username()==null || requestDto.email()==null){
-            throw new IllegalArgumentException("Invalid User Registration Request 1");
+    public User create(UserRegistrationRequestDto requestDto, Set<Role> roles){
+        String username = requestDto.username().trim();
+        String email = requestDto.email().trim().toLowerCase(Locale.ROOT);
+        if(!EmailAndPasswordValidator.isValidEmail(email)){
+            throw new InvalidRequestException("Email address is not valid");
         }
-        if(!EmailAndPasswordValidator.isStrongPassword(requestDto.password()) || !EmailAndPasswordValidator.isValidEmail(requestDto.email())){
-            throw new IllegalArgumentException("Invalid User Registration Request 2");
+
+        if(!EmailAndPasswordValidator.isStrongPassword(requestDto.password())){
+            throw new InvalidRequestException("Password is too weak");
         }
-        User user = new User();
-        user.setEnabled(true);
-        user.setEmail(requestDto.email().trim());
-        user.setUsername(requestDto.username().trim());
-        user.setPasswordHash(encoder.encode(requestDto.password()));
+
+        if(repository.existsByUsername(username)){
+            throw new ConflictException("Username is already taken");
+        }
+
+        if(repository.existsByEmail(email)){
+            throw new ConflictException("Email is already registered");
+        }
+
+        User user = new User(username,email,encoder.encode(requestDto.password()));
+        user.getRoles().clear();
+        user.getRoles().addAll(roles);
         return repository.save(user);
 
     }
 
 
     @Transactional
-    public UserRegistrationResponseDto responseOnSuccessfulRegistration(UserRegistrationRequestDto requestDto) {
-        User user = createUser(requestDto);
-        return UserRegistrationRequestResponseMapper.toResponseDto(true);
+    public UserRegistrationResponseDto createWithRoles(UserRegistrationRequestDto requestDto, Set<Role> roles) {
+        if(roles == null || roles.isEmpty()){
+            throw new InvalidRequestException("At least one role is required");
+        }
+        return UserRegistrationResponseDto.from(create(requestDto,roles));
     }
+
+    public UserRegistrationResponseDto register(UserRegistrationRequestDto requestDto){
+        return UserRegistrationResponseDto.from(create(requestDto, EnumSet.of(Role.USER)));
+    }
+
 
     public String changePassword(String password){
         if(!EmailAndPasswordValidator.isStrongPassword(password)){
