@@ -80,7 +80,6 @@ public class UserService {
 
         String username = getAuthenticatedUser().getUsername();
         User user = repository.findByUsername(username).orElseThrow(RuntimeException::new);
-        System.out.println("From ' changePassword ' author detail service: "+user.getUsername());
 
         if(Objects.equals(user.getPasswordHash(), password)){
             throw new IllegalArgumentException();

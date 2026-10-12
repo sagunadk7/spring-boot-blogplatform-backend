@@ -1,10 +1,8 @@
 package com.sagun.blog_platform_backend.service;
 
+import com.sagun.blog_platform_backend.customException.ConflictException;
 import com.sagun.blog_platform_backend.customException.ResourceNotFoundException;
-import com.sagun.blog_platform_backend.dto.CreatePostRequestDto;
-import com.sagun.blog_platform_backend.dto.PageResponseDto;
-import com.sagun.blog_platform_backend.dto.PostResponseDto;
-import com.sagun.blog_platform_backend.dto.PostSummary;
+import com.sagun.blog_platform_backend.dto.*;
 import com.sagun.blog_platform_backend.entity.Category;
 import com.sagun.blog_platform_backend.entity.Post;
 import com.sagun.blog_platform_backend.entity.User;
@@ -16,6 +14,7 @@ import com.sagun.blog_platform_backend.repository.PostRepository;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,19 +34,13 @@ public class PostService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
-    public PostResponseDto create(UserPrincipal principal,CreatePostRequestDto req) throws ResourceNotFoundException {
+    public PostResponseDto create(UserPrincipal principal,CreatePostRequestDto req) {
         User author = userRepository.getReferenceById(principal.getId());
         Post post = new Post(author, req.title().trim(), uniqueSlug(req.title()), req.content());
-        if(req.categories() != null && !req.categories().isEmpty()){
-            Set<CategoryType> categoryTypes = req.categories();
-            Set<Category> found = categoryRepository.findAllByTypeIn(categoryTypes);
-            if(found.size() != categoryTypes.size()){
-                throw new ResourceNotFoundException("One or more categories do not exists");
-            }
-            post.getCategories().addAll(found);
+        if(req.categories() !=null && !req.categories().isEmpty()){
+            post.getCategories().addAll(loadCategories(req.categories()));
         }
-        postRepository.save(post);
-        return PostResponseDto.from(post);
+        return PostResponseDto.from(postRepository.saveAndFlush(post));
     }
 
     public PageResponseDto<PostSummary> listPublished(Pageable pageable){
@@ -64,17 +57,53 @@ public class PostService {
         return PostResponseDto.from(post);
     }
 
+    @Transactional
+    public PostResponseDto update(String slug, UserPrincipal principal, UpdatePostRequestDto request){
+        Post post = loadOwnedOrAdmin(slug, principal);
+        if(post.getVersion() != request.version()){
+            throw new ObjectOptimisticLockingFailureException(Post.class,post.getId());
+        }
+        post.edit(request.title().trim(),request.content());
+        if(request.categoryTypes() != null){
+            post.getCategories().clear();
+            post.getCategories().addAll(loadCategories(request.categoryTypes()));
+        }
+        return PostResponseDto.from(postRepository.saveAndFlush(post));
+    }
 
     @Transactional
     public PostResponseDto publish(String slug,UserPrincipal principal) {
+        Post post = loadOwnedOrAdmin(slug, principal);
+        post.publish();
+        return PostResponseDto.from(postRepository.saveAndFlush(post));
+    }
+
+    @Transactional
+    public PostResponseDto unpublish(String slug, UserPrincipal principal){
+        Post post = loadOwnedOrAdmin(slug, principal);
+        if(post.getStatus() != PostStatus.PUBLISHED){
+            throw new ConflictException("Post id not published");
+        }
+        post.unpublish();
+        return PostResponseDto.from(postRepository.saveAndFlush(post));
+    }
+
+    private Post loadOwnedOrAdmin(String slug, UserPrincipal principal){
         Post post = postRepository.findBySlug(slug).orElseThrow(() -> new ResourceNotFoundException("Post not found: " + slug));
         boolean isOwner = post.getAuthor().getId().equals(principal.getId());
-        boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = principal.getAuthorities().stream().anyMatch(roles -> roles.getAuthority().equals("ROLE_ADMIN"));
         if(!isOwner && !isAdmin){
-            throw new AccessDeniedException("You cannot publish this post");
+            throw new AccessDeniedException("You cannot modify this post");
         }
-        post.publish();
-        return PostResponseDto.from(post);
+        return post;
+    }
+
+    private Set<Category> loadCategories(Set<CategoryType> categoryTypes ){
+        Set<Category> found = categoryRepository.findAllByTypeIn(categoryTypes);
+        if(found.size() != categoryTypes.size()){
+            throw new ResourceNotFoundException("One or more categories do not exist");
+        }
+        return found;
     }
 
     private String  uniqueSlug(String title){

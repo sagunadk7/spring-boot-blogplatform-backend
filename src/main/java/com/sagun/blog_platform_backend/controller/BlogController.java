@@ -1,10 +1,8 @@
 package com.sagun.blog_platform_backend.controller;
 
-import com.sagun.blog_platform_backend.dto.CreatePostRequestDto;
-import com.sagun.blog_platform_backend.dto.PageResponseDto;
-import com.sagun.blog_platform_backend.dto.PostResponseDto;
-import com.sagun.blog_platform_backend.dto.PostSummary;
+import com.sagun.blog_platform_backend.dto.*;
 import com.sagun.blog_platform_backend.entity.Post;
+import com.sagun.blog_platform_backend.entity.User;
 import com.sagun.blog_platform_backend.enums.PostStatus;
 import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.service.PostService;
@@ -32,8 +30,8 @@ public class BlogController {
 
     @PostMapping("/create")
     public ResponseEntity<PostResponseDto> createPost(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody CreatePostRequestDto requestDto){
-         PostResponseDto created = service.create(principal,requestDto);
-        URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/{slug}").buildAndExpand(created.slug()).toUri();
+        PostResponseDto created = service.create(principal,requestDto);
+        URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/v1/posts/{slug}").buildAndExpand(created.slug()).toUri();
         return ResponseEntity.created(uri).body(created);
     }
 
@@ -55,6 +53,16 @@ public class BlogController {
     @PostMapping("/{slug}/publish")
     public PostResponseDto publish(@AuthenticationPrincipal UserPrincipal userPrincipal, @PathVariable String slug){
         return service.publish(slug, userPrincipal);
+    }
+
+    @PostMapping("/{slug}/unpublish")
+    public PostResponseDto unpublish(@AuthenticationPrincipal UserPrincipal principal, @PathVariable String slug){
+        return service.unpublish(slug,principal);
+    }
+
+    @PutMapping("/{slug}")
+    public PostResponseDto update(@AuthenticationPrincipal UserPrincipal principal, @PathVariable String slug, @Valid @RequestBody UpdatePostRequestDto requestDto){
+        return service.update(slug,principal,requestDto);
     }
 
     private static Pageable pageable(int page, int size){

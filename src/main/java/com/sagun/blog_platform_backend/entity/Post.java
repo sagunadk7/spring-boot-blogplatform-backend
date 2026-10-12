@@ -80,6 +80,14 @@ public class Post extends BaseEntity {
         if(this.publishedAt == null) this.publishedAt = Instant.now();
     }
 
+    public void archive(){
+        this.status = PostStatus.ARCHIVED;
+    }
+
+    public void unpublish(){
+        this.status = PostStatus.DRAFT;
+    }
+
     public void addCategory(Category category){
         categories.add(category);
         category.getPosts().add(this);
