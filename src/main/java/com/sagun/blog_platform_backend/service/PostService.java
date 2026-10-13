@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -91,7 +92,7 @@ public class PostService {
     private Post loadOwnedOrAdmin(String slug, UserPrincipal principal){
         Post post = postRepository.findBySlug(slug).orElseThrow(() -> new ResourceNotFoundException("Post not found: " + slug));
         boolean isOwner = post.getAuthor().getId().equals(principal.getId());
-        boolean isAdmin = principal.getAuthorities().stream().anyMatch(roles -> roles.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = principal.getAuthorities().stream().anyMatch(roles -> Objects.equals(roles.getAuthority(), "ROLE_ADMIN"));
         if(!isOwner && !isAdmin){
             throw new AccessDeniedException("You cannot modify this post");
         }

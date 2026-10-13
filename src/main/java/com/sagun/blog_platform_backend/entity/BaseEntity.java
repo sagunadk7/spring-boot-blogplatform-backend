@@ -36,7 +36,7 @@ public abstract class BaseEntity {
             nullable = false
     )
     @LastModifiedDate
-    private Instant updateAt;
+    private Instant updatedAt;
 
     @Version
     private long version;

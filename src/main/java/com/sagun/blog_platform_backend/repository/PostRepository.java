@@ -32,4 +32,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(value = "select p.slug from Post p where p.status = :status ",
     countQuery = "select count(p) from Post p where p.status = :status")
     Page<String> findPublishedSlugs(@Param("status") PostStatus status, Pageable pageable);
+
+    @Query("select p.id from Post p where p.slug = :slug and p.status = :status")
+    Optional<Long> findIdBySlugAndStatus(@Param("slug") String slug, @Param("status") PostStatus status);
 }
