@@ -74,7 +74,7 @@ public class CommentService {
     public void delete(Long id, UserPrincipal principal){
         Comment comment = find(id);
         boolean isAuthor = comment.getAuthor().getId().equals(principal.getId());
-        boolean isStaff = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN)") || a.getAuthority().equals("ROLE_MODERATOR"));
+        boolean isStaff = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUPERUSER)"));
         if(!isStaff && !isAuthor){
             throw new AccessDeniedException("You cannot delete this comment");
         }

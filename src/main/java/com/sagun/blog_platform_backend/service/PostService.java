@@ -92,7 +92,7 @@ public class PostService {
     private Post loadOwnedOrAdmin(String slug, UserPrincipal principal){
         Post post = postRepository.findBySlug(slug).orElseThrow(() -> new ResourceNotFoundException("Post not found: " + slug));
         boolean isOwner = post.getAuthor().getId().equals(principal.getId());
-        boolean isAdmin = principal.getAuthorities().stream().anyMatch(roles -> Objects.equals(roles.getAuthority(), "ROLE_ADMIN"));
+        boolean isAdmin = principal.getAuthorities().stream().anyMatch(roles -> Objects.equals(roles.getAuthority(), "ROLE_SUPERUSER"));
         if(!isOwner && !isAdmin){
             throw new AccessDeniedException("You cannot modify this post");
         }

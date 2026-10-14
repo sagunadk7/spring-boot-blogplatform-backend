@@ -53,8 +53,6 @@ public class UserService {
         }
 
         User user = new User(username,email,encoder.encode(requestDto.password()));
-        user.getRoles().clear();
-        user.getRoles().addAll(roles);
         return repository.save(user);
 
     }
@@ -69,7 +67,7 @@ public class UserService {
     }
 
     public UserRegistrationResponseDto register(UserRegistrationRequestDto requestDto){
-        return UserRegistrationResponseDto.from(create(requestDto, EnumSet.of(Role.USER)));
+        return UserRegistrationResponseDto.from(create(requestDto, EnumSet.of(Role.AUTHOR)));
     }
 
 
