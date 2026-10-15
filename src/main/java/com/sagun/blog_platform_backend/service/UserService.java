@@ -9,10 +9,12 @@ import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.repository.UserRepository;
 import com.sagun.blog_platform_backend.utils.EmailAndPasswordValidator;
 import com.sagun.blog_platform_backend.utils.JWTUtils;
+import com.sagun.blog_platform_backend.utils.RefreshCookieFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,9 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.EnumSet;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 
 
@@ -32,8 +32,9 @@ public class UserService {
     private final UserRepository repository;
     private final JWTUtils jwtUtils;
     private final PasswordEncoder encoder;
+    private final RefreshCookieFactory refreshCookies;
 
-    public User create(UserRegistrationRequestDto requestDto, Set<Role> roles){
+    public User create(UserRegistrationRequestDto requestDto){
         String username = requestDto.username().trim();
         String email = requestDto.email().trim().toLowerCase(Locale.ROOT);
         if(!EmailAndPasswordValidator.isValidEmail(email)){
@@ -58,54 +59,40 @@ public class UserService {
     }
 
 
-    @Transactional
-    public UserRegistrationResponseDto createWithRoles(UserRegistrationRequestDto requestDto, Set<Role> roles) {
-        if(roles == null || roles.isEmpty()){
-            throw new InvalidRequestException("At least one role is required");
-        }
-        return UserRegistrationResponseDto.from(create(requestDto,roles));
-    }
 
     public UserRegistrationResponseDto register(UserRegistrationRequestDto requestDto){
-        return UserRegistrationResponseDto.from(create(requestDto, EnumSet.of(Role.AUTHOR)));
+        return UserRegistrationResponseDto.from(create(requestDto));
     }
 
 
     public String changePassword(String password){
         if(!EmailAndPasswordValidator.isStrongPassword(password)){
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Password is too weak");
         }
 
-        String username = getAuthenticatedUser().getUsername();
-        User user = repository.findByUsername(username).orElseThrow(RuntimeException::new);
-
-        if(Objects.equals(user.getPasswordHash(), password)){
-            throw new IllegalArgumentException();
+        User user = getAuthenticatedUser();
+        if(encoder.matches(password,user.getPasswordHash())){
+            throw new InvalidRequestException("The new password must be different from the current one");
         }
         user.setPasswordHash(encoder.encode(password));
         repository.save(user);
-        return "Password Changed successfully" + "Your new password is: "+ " "+password;
+        return "Password changed successfully";
     }
 
 
     public UserLoginResponseDto login(UserLoginRequestDto requestDto, HttpServletResponse response){
-        String token = null;
-        User user = repository.findByUsername(requestDto.username()).orElseThrow(()->new RuntimeException("User not found"));
-        if(encoder.matches(requestDto.password(),user.getPasswordHash())){
-            token  = jwtUtils.generateJwtToken(user.getUsername(),true);
+        String identifier = requestDto.username().trim();
+        User user = (identifier.contains("@") ? repository.findByEmail(identifier.toLowerCase(Locale.ROOT)) : repository.findByUsername(identifier)).orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+        if(!encoder.matches(requestDto.password(), user.getPasswordHash())){
+            throw new BadCredentialsException("Invalid credentials");
         }
-        if(token==null){
-            throw new RuntimeException();
+        if(!user.isEnabled()){
+            throw new DisabledException("Account is disabled");
         }
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", jwtUtils.generateJwtToken(user.getUsername(), false))
-                .httpOnly(true)
-                .secure(true)
-                .maxAge(7*24*60*60)
-                .sameSite("strict")
-                .path("/api/v1/auth/refresh-token")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return new UserLoginResponseDto(token);
+        String accessToken = jwtUtils.generateJwtToken(user.getUsername(), true);
+        String refreshToken = jwtUtils.generateJwtToken(user.getUsername(), false);
+        response.addHeader(HttpHeaders.SET_COOKIE,refreshCookies.create(refreshToken).toString());
+        return new UserLoginResponseDto(accessToken);
     }
 
 
@@ -118,9 +105,15 @@ public class UserService {
     }
 
     public String updateEmail(UserEmailUpdateRequestDto requestDto){
-        String username = getAuthenticatedUser().getUsername();
-        User user = repository.findByUsername(username).orElseThrow(()-> new RuntimeException("User not found"));
-        user.setEmail(requestDto.email());
+        String email = requestDto.email().toLowerCase(Locale.ROOT);
+        if (!EmailAndPasswordValidator.isValidEmail(email)) {
+            throw new InvalidRequestException("Email address is not valid");
+        }
+        User user = getAuthenticatedUser();
+        if(!email.equals(user.getEmail()) && repository.existsByEmail(email)){
+            throw new ConflictException("Email is already registered");
+        }
+        user.setEmail(email);
         repository.save(user);
         return "Successfully updated an email ";
     }
