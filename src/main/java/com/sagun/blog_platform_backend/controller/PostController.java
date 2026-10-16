@@ -1,14 +1,10 @@
 package com.sagun.blog_platform_backend.controller;
 
 import com.sagun.blog_platform_backend.dto.*;
-import com.sagun.blog_platform_backend.entity.Post;
-import com.sagun.blog_platform_backend.entity.User;
-import com.sagun.blog_platform_backend.enums.PostStatus;
 import com.sagun.blog_platform_backend.principal.UserPrincipal;
 import com.sagun.blog_platform_backend.service.PostService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.hibernate.query.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,7 +18,7 @@ import java.net.URI;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/posts")
-public class BlogController {
+public class PostController {
 
     private static final int MAX_PAGE_SIZE = 100;
 

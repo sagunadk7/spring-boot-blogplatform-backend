@@ -22,7 +22,7 @@ public class  User extends BaseEntity {
     private String passwordHash;
 
     @Column(nullable = false)
-    private boolean enabled;
+    private boolean enabled = true;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_roles",joinColumns = @JoinColumn(name = "user_id"))
@@ -94,8 +94,12 @@ public class  User extends BaseEntity {
         this.passwordHash = passwordHash;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void disableAccount() {
+        this.enabled = false;
+    }
+
+    public void enableAccount(){
+        this.enabled=true;
     }
 
     public void setRoles(Set<Role> roles) {
