@@ -24,7 +24,7 @@ public class PostController {
 
     private final PostService service;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<PostResponseDto> createPost(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody CreatePostRequestDto requestDto){
         PostResponseDto created = service.create(principal,requestDto);
         URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/v1/posts/{slug}").buildAndExpand(created.slug()).toUri();
